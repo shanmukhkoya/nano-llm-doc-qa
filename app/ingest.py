@@ -1,34 +1,70 @@
-import os
+import glob
+import chromadb
+from sentence_transformers import SentenceTransformer
 import fitz  # PyMuPDF
-import pandas as pd
-from docx import Document
+import docx
 
-def read_pdf(file_path):
-    doc = fitz.open(file_path)
-    return "\n".join([page.get_text() for page in doc])
+def extract_text(file_path):
+    if file_path.endswith(".pdf"):
+        text = ""
+        with fitz.open(file_path) as doc:
+            for page in doc:
+                text += page.get_text()
+        return text
 
-def read_docx(file_path):
-    doc = Document(file_path)
-    return "\n".join([para.text for para in doc.paragraphs])
+    elif file_path.endswith(".docx"):
+        doc = docx.Document(file_path)
+        return "\n".join([para.text for para in doc.paragraphs])
 
-def read_txt(file_path):
-    with open(file_path, 'r', encoding='utf-8') as f:
-        return f.read()
+    elif file_path.endswith(".txt") or file_path.endswith(".md"):
+        with open(file_path, "r", encoding="utf-8") as f:
+            return f.read()
 
-def read_csv(file_path):
-    df = pd.read_csv(file_path)
-    return df.to_string()
+    return ""
 
-def load_documents(folder_path):
-    docs = []
-    for filename in os.listdir(folder_path):
-        path = os.path.join(folder_path, filename)
-        if filename.endswith(".pdf"):
-            docs.append((filename, read_pdf(path)))
-        elif filename.endswith(".docx"):
-            docs.append((filename, read_docx(path)))
-        elif filename.endswith(".txt"):
-            docs.append((filename, read_txt(path)))
-        elif filename.endswith(".csv"):
-            docs.append((filename, read_csv(path)))
-    return docs
+def chunk_text(text, chunk_size=300, overlap=50):
+    chunks = []
+    start = 0
+    while start < len(text):
+        end = start + chunk_size
+        chunks.append(text[start:end])
+        start += chunk_size - overlap
+    return chunks
+
+def ingest_docs():
+    client = chromadb.PersistentClient(path="./chroma_db")
+    collection = client.get_or_create_collection("docs")
+
+    embedder = SentenceTransformer("all-MiniLM-L6-v2")
+
+    supported_exts = (".pdf", ".docx", ".txt", ".md")
+    files = [f for f in glob.glob("data/*") if f.lower().endswith(supported_exts)]
+
+    doc_id = 0
+
+    for file in files:
+        print(f"Ingesting: {file}")
+        text = extract_text(file)
+        chunks = chunk_text(text)
+
+        # Filter out empty chunks
+        filtered_chunks = [chunk for chunk in chunks if chunk.strip() != ""]
+
+        if not filtered_chunks:
+            print(f"Skipping {file} as it has no valid text chunks.")
+            continue
+
+        embeddings = embedder.encode(filtered_chunks).tolist()
+        ids = [f"doc_{doc_id}_{i}" for i in range(len(filtered_chunks))]
+        doc_id += 1
+
+        collection.add(
+            documents=filtered_chunks,
+            embeddings=embeddings,
+            ids=ids
+        )
+
+    print("✅ Ingestion complete!")
+
+if __name__ == "__main__":
+    ingest_docs()
