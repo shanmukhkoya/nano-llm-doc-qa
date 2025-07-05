@@ -1,47 +1,55 @@
 ## 📌 Project Overview
 
-### 🧠 Description
+### 🧠 What Is This Project?
 
-**Nano LLM Document QA** is a lightweight, local-first Question Answering (QA) system built to allow users to ask questions about their documents using a small, fast, and efficient language model. It is specifically designed to work on resource-constrained systems without requiring internet access or large cloud APIs.
+**Nano LLM Document QA** is a beginner-friendly, lightweight document-based Question Answering system. You upload documents (PDF or Word), and the system allows you to ask natural language questions based on the content. It's designed to:
 
-### 🎯 Project Goals
-
-* Ingest and vectorize documents locally
-* Store and search embeddings using FAISS
-* Use a compact LLM (like GPT4All, LLaMA.cpp, or TinyLLM) to answer user queries
-* Serve a simple interface for querying documents
-* Minimal dependencies to ensure it's fast and lightweight
-
-### 🚦 Project Phase: Initial Working Prototype ✅
-
-We have successfully completed the first phase of the project:
-
-* 🔹 Local ingestion and chunking of documents
-* 🔹 Embedding with FAISS
-* 🔹 Querying via RetrievalQA
-* 🔹 Code pushed to GitHub
-
-We are now transitioning into the **next development phase**, which will focus on:
-
-* 🔸 UI for user interaction (simple web/chat interface)
-* 🔸 Replacing remote models with fully local LLMs (like llama.cpp)
-* 🔸 Optimization and performance tuning
-* 🔸 Packaging and documentation
+* Run on machines with limited resources (like WSL or cloud PCs)
+* Use local file storage
+* Work even without internet (once everything is set up)
+* Help you learn Python, LLMs (Language Models), and app development step-by-step
 
 ---
 
-## 🛠️ Step-by-Step: How We Built This Project
+## 🎯 Project Goals
 
-### Step 1: 🏗️ Create Project Structure
+1. 🔍 **Understand your documents** using AI
+2. 🧠 Use small but powerful LLMs (like Mistral, GPT4All, etc.)
+3. 💾 Store document info using a fast local database (ChromaDB)
+4. 🔗 Ask questions and get answers through a terminal or a web UI (Streamlit)
+5. 📦 Keep the setup simple and installable with basic Python knowledge
 
-We started by creating a directory:
+---
+
+## ✅ What’s Working Now (as of today)
+
+✔️ Ingesting PDFs or Word docs
+✔️ Generating vector embeddings using OpenRouter’s LLM API
+✔️ Storing them locally in ChromaDB
+✔️ Asking questions via a command-line test script or web UI
+✔️ Running completely inside a Python virtual environment on WSL
+✔️ Code is version-controlled and live on GitHub
+
+---
+
+## 🛠️ Build Process (for beginners)
+
+### 🧱 Step 1: Project Folder
 
 ```bash
-mkdir nano-llm-doc-qa
-cd nano-llm-doc-qa
+mkdir nano-llm-doc-qa && cd nano-llm-doc-qa
 ```
 
-### Step 2: 🐍 Setup Python Environment
+Create these subfolders:
+
+```
+app/         # Python logic files
+config/      # Settings in YAML format
+data/        # Place your PDFs or DOCX files here
+chroma_db/   # This will be auto-created to store processed info
+```
+
+### 🐍 Step 2: Setup Python Environment
 
 ```bash
 python3 -m venv venv
@@ -49,110 +57,178 @@ source venv/bin/activate
 pip install --upgrade pip
 ```
 
-### Step 3: 📦 Install Required Libraries
-
-We installed the basic dependencies:
+If `venv` fails, install with:
 
 ```bash
-pip install langchain faiss-cpu openai python-dotenv
+sudo apt install python3-venv -y
 ```
 
-*Depending on the LLM used, other libraries like `llama-cpp-python` or `gpt4all` may be included later.*
+### 📦 Step 3: Install Required Libraries
 
-### Step 4: 📄 Load and Split Documents
+```bash
+pip install chromadb python-docx PyMuPDF streamlit requests pyyaml
+```
 
-We used LangChain’s `DirectoryLoader` and `TextSplitter` to load and chunk documents:
+If any library fails, try `pip install --upgrade package_name`
+
+### 🔑 Step 4: Add API Key (OpenRouter)
+
+Register at: [https://openrouter.ai](https://openrouter.ai)
+
+Then create:
+
+```
+config/config.yaml
+```
+
+With this content:
+
+```yaml
+llm:
+  provider: openrouter
+  api_key: "sk-...your-key-here..."
+  model: "mistralai/mistral-7b-instruct"
+```
+
+### 📥 Step 5: Add Documents
+
+Put all your documents in the `data/` folder. Example:
+
+```
+data/
+└── Genesys Ccaas Guide.pdf
+```
+
+### 🧪 Step 6: Ingest Your Docs
+
+```bash
+python app/ingest.py
+```
+
+You should see:
+
+```
+Ingesting: data/Genesys Ccaas Guide.pdf
+✅ Ingestion complete!
+```
+
+### ❓ Step 7: Ask Questions via CLI
+
+```bash
+PYTHONPATH=. python app/test_query.py
+```
+
+Edit `test_query.py` and update this line:
 
 ```python
-from langchain.document_loaders import DirectoryLoader
-from langchain.text_splitter import CharacterTextSplitter
+question = "What is CCaaS?"
 ```
 
-We split long documents into smaller chunks for embedding.
+### 🌐 Step 8: Launch Web UI
 
-### Step 5: 🧠 Generate Embeddings
-
-We used embedding models like `OpenAIEmbeddings` or local models for creating vector representations of each chunk.
-
-### Step 6: 📚 Store Embeddings in FAISS
-
-FAISS is used for fast similarity search:
-
-```python
-from langchain.vectorstores import FAISS
+```bash
+PYTHONPATH=. streamlit run app/ui_app.py
 ```
 
-We saved and reloaded the FAISS index to persist data.
+Open browser at: [http://localhost:8501](http://localhost:8501)
 
-### Step 7: 🤖 Answer Queries
+Use the chat box to ask questions like:
 
-We connected the retriever to a chain that uses a language model to answer questions based on the most relevant document chunks:
-
-```python
-from langchain.chains import RetrievalQA
-```
-
-We used either a local LLM or a cloud-hosted one for response generation.
-
-### Step 8: 🧪 Testing the App
-
-We tested using CLI or a minimal Python script to query the vectorstore and get accurate answers.
-
-### Step 9: 📋 Create `.gitignore`
-
-Avoid unnecessary files in Git:
-
-```
-venv/
-__pycache__/
-*.pyc
-*.pkl
-*.faiss
-.env
-```
-
-### Step 10: 📂 Create GitHub Repo & Push Code
-
-Followed the GitHub steps to initialize the repo, commit files, and push to GitHub (see below).
+* "What does Genesys Cloud mean by queue?"
+* "Explain CCaaS in simple words."
 
 ---
 
-## ✅ GitHub Push Instructions (Recap)
+## 📂 Directory Overview
 
-### **🧩 Prerequisites**
-
-1. Install Git:
-
-```bash
-sudo apt update
-sudo apt install git
+```
+nano-llm-doc-qa/
+├── app/
+│   ├── ingest.py           # Parses and indexes files
+│   ├── query_engine.py     # Query logic with ChromaDB + LLM
+│   ├── llm_runner.py       # Handles API call to OpenRouter
+│   └── test_query.py       # Simple test CLI script
+├── config/
+│   └── config.yaml         # Your API key and model config
+├── data/                   # Your input documents
+├── chroma_db/              # Local database folder (auto-created)
+├── requirements.txt        # All installable Python packages
+├── README.md               # Project documentation
 ```
 
-2. Configure Git:
+---
 
-```bash
-git config --global user.name "Shanmukh Koya"
-git config --global user.email "your_email@example.com"
-```
+## 📤 GitHub Integration
 
-### **🌐 Create GitHub Repository**
-
-1. Go to GitHub → New Repository → Name: `nano-llm-doc-qa`
-2. Don’t initialize with README
-3. Copy the repo URL
-
-### **📦 Go to Project Folder**
-
-```bash
-cd ~/nano-llm-doc-qa
-```
-
-### **📸 Initialize and Push**
+### Setup (First Time)
 
 ```bash
 git init
+git remote add origin https://github.com/shanmukhkoya/nano-llm-doc-qa.git
 git add .
-git commit -m "Initial commit - Nano LLM Doc QA project"
-git remote add origin https://github.com/yourusername/nano-llm-doc-qa.git
+git commit -m "Initial commit"
 git branch -M main
 git push -u origin main
+```
+
+### Later Updates
+
+```bash
+git add .
+git commit -m "Update ingestion + fix bugs + working UI"
+git push origin main
+```
+
+To check if local = GitHub:
+
+```bash
+git status
+```
+
+You should see:
+
+```
+On branch main
+Your branch is up to date with 'origin/main'.
+```
+
+---
+
+## 🧠 LLM + Tech Stack
+
+* **Python 3.12**
+* **ChromaDB** - fast local embedding DB
+* **LangChain** - text splitting + RAG pipeline
+* **OpenRouter API** - cloud-based LLM (Mistral 7B etc.)
+* **Streamlit** - frontend for Q\&A
+* **PyMuPDF / python-docx** - for PDF/DOCX reading
+
+---
+
+## 🧪 Test Questions
+
+* "What is CCaaS?"
+* "Explain call routing in Genesys Cloud."
+* "Where can I access community help?"
+
+---
+
+## 🙌 Maintainer & Learner
+
+Project built step-by-step by **Shanmukh Koya** as a learning project to master:
+
+* Python development
+* Document-based AI apps
+* Building and deploying local LLM tools
+* GitHub + Streamlit + APIs
+
+Feel free to fork, reuse, and improve this project!
+
+---
+
+## 🚀 Coming Soon (Next Phase)
+
+* ✅ File upload from UI
+* 🔄 Local LLM options (LLaMA.cpp / GPT4All)
+* 💡 More model configurations
+* 📦 One-click installer or Docker version
