@@ -6,5 +6,5 @@ __pycache__/
 *.DS_Store
 .env
 chroma_db/
-*.Zone.Identifier
+*:Zone.Identifier
 *:sec.endpointdlp
