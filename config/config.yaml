@@ -1,0 +1,4 @@
+llm:
+  provider: openrouter
+  api_key: "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"
+  model: "mistralai/mistral-7b-instruct"

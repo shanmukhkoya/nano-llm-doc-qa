@@ -1,6 +1,6 @@
 from sentence_transformers import SentenceTransformer
 import chromadb
-from app.llm_runner import call_openrouter_llm
+from app.llm_runner import query_openrouter as call_openrouter_llm
 
 def answer_question(question):
     client = chromadb.PersistentClient(path="./chroma_db")
