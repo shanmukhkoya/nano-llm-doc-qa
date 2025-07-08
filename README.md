@@ -232,3 +232,9 @@ Feel free to fork, reuse, and improve this project!
 * 🔄 Local LLM options (LLaMA.cpp / GPT4All)
 * 💡 More model configurations
 * 📦 One-click installer or Docker version
+
+
+## 🚀 Bonus 
+
+To clear the chromaDB and make it empty
+rm -rf chroma_db/
